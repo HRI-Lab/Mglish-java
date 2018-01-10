@@ -212,6 +212,9 @@ $RECYCLE.BIN/
 *.msm
 *.msp
 
+# Custom
+Credentials.java
+
 # Windows shortcuts
 *.lnk
 
