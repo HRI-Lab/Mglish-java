@@ -6,18 +6,26 @@
  * user guide available at https://docs.gradle.org/4.3/userguide/java_library_plugin.html
  */
 
-apply plugin: 'java'
-apply plugin: 'eclipse'
+//apply plugin: 'java'
+//apply plugin: 'eclipse'
 
 // Apply the java-library plugin to add support for Java Library
 apply plugin: 'java-library'
+
+//mainClassName = 'main.java.DashboardApp'
 
 // In this section you declare where to find the dependencies of your project
 repositories {
     // Use jcenter for resolving your dependencies.
     // You can declare any Maven/Ivy/file repository here.
     jcenter()
+    mavenCentral()
 }
+
+//tag::dependencies[]
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 dependencies {
     // This dependency is exported to consumers, that is to say found on their compile classpath.
@@ -30,6 +38,7 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     
     // Watson SDK - Speech to Text
-    'com.ibm.watson.developer_cloud:speech-to-text:4.2.1'
+    compile 'com.ibm.watson.developer_cloud:speech-to-text:4.2.1'
 }
 
+// end::dependencies[]
