@@ -1,17 +1,19 @@
 package main;
 
-import com.ibm.watson.developer_cloud.speech_to_text.v1.model.SpeechResults;;
+import com.ibm.watson.developer_cloud.http.HttpMediaType;
+import com.ibm.watson.developer_cloud.speech_to_text.v1.model.RecognizeOptions;
+import com.ibm.watson.developer_cloud.speech_to_text.v1.model.SpeechResults;
 
 public class TestCase {
 	public String resourcePath = "";
 	public String transcript = "";
 	public SpeechResults result;
+	public RecognizeOptions options;
 	
 	private String resultTranscript() {
 		return this.result.getResults().get(0).getAlternatives().get(0).getTranscript();
 	}
-	
-	
+		
 	public boolean isCorrect() {
 		String resultTranscript = this.resultTranscript();
 		resultTranscript = trimRight(resultTranscript);
