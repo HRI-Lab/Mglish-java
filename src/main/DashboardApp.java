@@ -8,8 +8,6 @@ import com.ibm.watson.developer_cloud.speech_to_text.v1.SpeechToText;
 import com.ibm.watson.developer_cloud.speech_to_text.v1.model.RecognizeOptions;
 
 public class DashboardApp {
-	private static final int numberOfTestCases = 3;
-//	private static TestCase[] testCases;
 	private static ArrayList<TestCase> testCases = new ArrayList<TestCase>();
 	
 	private static SpeechToText service = new SpeechToText();
@@ -22,7 +20,7 @@ public class DashboardApp {
 				.timestamps(true)
 			    .contentType(HttpMediaType.AUDIO_WAV)
 			    .build();
-		testCases.add(testCase);
+		//testCases.add(testCase);
 		
 		testCase = new TestCase();
 		testCase.resourcePath = "resources/Sample2.mp3";
@@ -32,7 +30,7 @@ public class DashboardApp {
 				.speakerLabels(true)
 			    .contentType(HttpMediaType.AUDIO_MP3)
 			    .build();
-		testCases.add(testCase);
+		//testCases.add(testCase);
 		
 		testCase = new TestCase();
 		testCase.resourcePath = "resources/Sample2_mix.mp3";

@@ -33,20 +33,32 @@ public class TestCase {
 		transcriptArr = this.transcript.split(" ");
 		ArrayList<Integer> wrongList = new ArrayList<Integer>();
 		
+		// Example
 		// I want to send this Ranma do you have a box yeah I found this one to put the photo albums in five it's a bit small
 		// dad I want to send this book to grandma do you have a box yeah I've got this one to put photo albums in but it's a bit small
 		int offset = 0;
 		for (int i = 0; i < resultArr.length; i++) {
 			// 틀리면
 			if (!(resultArr[i].equals(transcriptArr[i + offset]))) {
-				wrongList.add(i+offset);
+				boolean flag = false;
 				// 오차범위 MAX_OFFSET 이내의 같은 값을 찾는다. (offset을 구한다.)
 				for (int j = 1; j < resultArr.length && j <= MAXOFFSET; j++) {
 					if (resultArr[i].equals(transcriptArr[i + j + offset])) {
 						offset += j;
+						flag = true;
+						break;
+					} else if ((i - j + offset) > 0 && resultArr[i].equals(transcriptArr[i - j + offset])) {
+						offset -= j;
+						flag = true;
 						break;
 					}
 				}
+				
+				if (!flag) {
+					wrongList.add(i);
+					System.out.println("Wrong Word : " + i + " : " + resultArr[i] + " ");
+				}
+				
 			}
 			
 		}
