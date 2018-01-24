@@ -14,13 +14,10 @@ Eclipse, Java, Watson SDK
 ## Output
 
 ```
-1월 25, 2018 12:53:21 오전 okhttp3.internal.platform.Platform log
+1월 25, 2018 1:09:35 오전 okhttp3.internal.platform.Platform log
 정보: --> POST https://stream.watsonplatform.net/speech-to-text/api/v1/recognize?timestamps=true http/1.1 (355270-byte body)
-1월 25, 2018 12:53:27 오전 okhttp3.internal.platform.Platform log
-정보: <-- 200 OK https://stream.watsonplatform.net/speech-to-text/api/v1/recognize?timestamps=true (5873ms, unknown-length body)
-0
-I want to send this Ranma do you have a box yeah I found this one to put the photo albums in five it's a bit small
-dad I want to send this book to grandma do you have a box yeah I've got this one to put photo albums in but it's a bit small the box looks big enough for the book can I use it
+1월 25, 2018 1:09:41 오전 okhttp3.internal.platform.Platform log
+정보: <-- 200 OK https://stream.watsonplatform.net/speech-to-text/api/v1/recognize?timestamps=true (5711ms, unknown-length body)
 Wrong Word : 5 : Ranma 
 Wrong Word : 12 : I 
 Wrong Word : 13 : found 

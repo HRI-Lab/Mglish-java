@@ -36,8 +36,8 @@ public class TestCase {
 		String resultTranscript = this.resultTranscript();
 		resultTranscript = trimRight(resultTranscript);
 		
-		System.out.println(resultTranscript);
-		System.out.println(transcript);
+		//System.out.println(resultTranscript);
+		//System.out.println(transcript);
 		
 		return resultTranscript.equals(transcript);
 	}

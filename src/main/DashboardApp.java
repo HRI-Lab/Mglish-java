@@ -51,14 +51,14 @@ public class DashboardApp {
 		initSpeechToText();
  
 		// Test
-		int i = 0;
+		//int i = 0;
 		
 		for (TestCase t: testCases) {
 			File audio = new File(t.resourcePath);
 			
 			t.result = service.recognize(audio, t.options).execute();
 			
-			System.out.println(i++);
+			//System.out.println(i++);
 			//System.out.println("Results from Watson" + t.result);
 			
 			if (t.isCorrect())
