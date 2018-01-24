@@ -1,5 +1,7 @@
 package main;
 
+import java.util.ArrayList;
+
 import com.ibm.watson.developer_cloud.http.HttpMediaType;
 import com.ibm.watson.developer_cloud.speech_to_text.v1.model.RecognizeOptions;
 import com.ibm.watson.developer_cloud.speech_to_text.v1.model.SpeechResults;
@@ -24,16 +26,32 @@ public class TestCase {
 		return resultTranscript.equals(transcript);
 	}
 	
-	public int findIndexOfWord() {
+	public ArrayList<Integer> findIndexOfWord() {
+		final int MAXOFFSET = 5;
 		String[] resultArr, transcriptArr;
 		resultArr = this.resultTranscript().split(" ");
 		transcriptArr = this.transcript.split(" ");
+		ArrayList<Integer> wrongList = new ArrayList<Integer>();
 		
+		// I want to send this Ranma do you have a box yeah I found this one to put the photo albums in five it's a bit small
+		// dad I want to send this book to grandma do you have a box yeah I've got this one to put photo albums in but it's a bit small
+		int offset = 0;
 		for (int i = 0; i < resultArr.length; i++) {
-			if (!(resultArr[i].equals(transcriptArr[i])))
-				return i;
+			// 틀리면
+			if (!(resultArr[i].equals(transcriptArr[i + offset]))) {
+				wrongList.add(i+offset);
+				// 오차범위 MAX_OFFSET 이내의 같은 값을 찾는다. (offset을 구한다.)
+				for (int j = 1; j < resultArr.length && j <= MAXOFFSET; j++) {
+					if (resultArr[i].equals(transcriptArr[i + j + offset])) {
+						offset += j;
+						break;
+					}
+				}
+			}
+			
 		}
-		return -1;
+		
+		return wrongList;
 	}
 	
     public static String trimRight(String s) {
