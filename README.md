@@ -1,6 +1,16 @@
 # Mglish
 Eclipse, Java, Watson SDK
 
+## How to Add Testcases
+
+[howto](images/howto1.png)
+
+- put audio file in the resource folder.
+
+[howto](images/howto2.png)
+
+- put some code in the initTestCases() which located in DashboardApp.java
+
 ## Output
 
 ```
