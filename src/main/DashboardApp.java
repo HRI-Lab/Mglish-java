@@ -59,12 +59,20 @@ public class DashboardApp {
 			t.result = service.recognize(audio, t.options).execute();
 			
 			System.out.println(i++);
-			System.out.println(t.result);
+			//System.out.println("Results from Watson" + t.result);
 			
 			if (t.isCorrect())
 				System.out.println(t.isCorrect());
-			else 
-				System.out.println(t.findIndexOfWord());
+			else {
+				System.out.println("Wrong Words Index : " + t.findByResult());
+				System.out.println();
+				t.printTimeStampResult();
+				System.out.println();
+				System.out.println("Results from Watson : \n" + t.resultTranscript());
+				t.printTranscriptResult();
+				System.out.println();
+				System.out.println("Answer : \n" + t.transcript);
+			}
 			
 			//System.out.println(t.result.getResults().get(0).getAlternatives().get(0).getTranscript());
 			
