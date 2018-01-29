@@ -11,83 +11,104 @@ Eclipse, Java, Watson SDK
 
 - put some code in the initTestCases() which located in DashboardApp.java
 
-## Output
+## Results
+
+ìž¡ìŒì´ ì„žì¸ ìŒì„±íŒŒ
+```
+Speaker 1 : dad		 [0.00 ~ 0.22]
+Speaker 1 : I		 [0.22 ~ 0.43]
+Speaker 1 : want		 [0.86 ~ 1.19]
+Speaker 1 : to		 [1.19 ~ 1.35]
+Speaker 1 : send		 [1.35 ~ 1.67]
+Speaker 1 : this		 [1.67 ~ 1.83]
+Speaker 1 : book		 [1.83 ~ 1.94]
+Speaker 1 : to		 [1.94 ~ 2.05]
+Speaker 1 : grandma	 [2.05 ~ 2.17]
+Speaker 1 : do		 [3.29 ~ 3.44]
+Speaker 1 : you		 [3.44 ~ 3.67]
+Speaker 1 : have		 [3.67 ~ 3.95]
+Speaker 1 : a		 [3.95 ~ 4.05]
+Speaker 1 : box		 [4.05 ~ 4.72]
+Speaker 2 : yeah		 [5.24 ~ 5.70]
+Speaker 2 : I've		 [5.70 ~ 5.83]
+Speaker 2 : got		 [5.83 ~ 5.96]
+Speaker 2 : this		 [6.61 ~ 6.87]
+Speaker 2 : one		 [6.87 ~ 7.15]
+Speaker 2 : to		 [7.15 ~ 7.26]
+Speaker 2 : put		 [7.26 ~ 7.48]
+Speaker 2 : photo	 [7.54 ~ 7.84]
+Speaker 2 : albums	 [7.84 ~ 8.28]
+Speaker 2 : in		 [8.28 ~ 8.54]
+Speaker 2 : but		 [8.54 ~ 8.79]
+Speaker 2 : it's		 [9.28 ~ 9.47]
+Speaker 2 : a		 [9.47 ~ 9.57]
+Speaker 2 : bit		 [9.57 ~ 9.81]
+Speaker 2 : small	 [9.81 ~ 10.32]
+Speaker 0 : the		 [10.32 ~ 10.50]
+Speaker 0 : box		 [10.50 ~ 10.68]
+Speaker 1 : looks	 [11.41 ~ 11.70]
+Speaker 1 : big		 [11.70 ~ 11.93]
+Speaker 1 : enough	 [11.93 ~ 12.26]
+Speaker 1 : for		 [12.26 ~ 12.48]
+Speaker 1 : the		 [12.48 ~ 12.60]
+Speaker 1 : book		 [12.60 ~ 13.03]
+Speaker 1 : can		 [13.52 ~ 13.71]
+Speaker 1 : I		 [13.71 ~ 13.81]
+Speaker 1 : use		 [13.81 ~ 14.11]
+Speaker 1 : it		 [14.11 ~ 14.30]
+
+Speaker 1 : dad I want to send this book to grandma do you have a box 
+Speaker 2 : yeah I've got this one to put photo albums in but it's a bit small 
+Speaker 0 : the box 
+Speaker 1 : looks big enough for the book can I use it 
+```
+
+ì›ëž˜ ìŒì„±íŒŒì¼
 
 ```
-1¿ù 25, 2018 1:09:35 ¿ÀÀü okhttp3.internal.platform.Platform log
-Á¤º¸: --> POST https://stream.watsonplatform.net/speech-to-text/api/v1/recognize?timestamps=true http/1.1 (355270-byte body)
-1¿ù 25, 2018 1:09:41 ¿ÀÀü okhttp3.internal.platform.Platform log
-Á¤º¸: <-- 200 OK https://stream.watsonplatform.net/speech-to-text/api/v1/recognize?timestamps=true (5711ms, unknown-length body)
-Wrong Word : 5 : Ranma 
-Wrong Word : 12 : I 
-Wrong Word : 13 : found 
-Wrong Word : 18 : the 
-Wrong Word : 22 : five 
-Wrong Words Index : [5, 12, 13, 18, 22]
+Speaker 1 : dad		 [0.03 ~ 0.54]
+Speaker 1 : I		 [0.71 ~ 0.87]
+Speaker 1 : want		 [0.87 ~ 1.20]
+Speaker 1 : to		 [1.20 ~ 1.36]
+Speaker 1 : send		 [1.36 ~ 1.66]
+Speaker 1 : this		 [1.66 ~ 1.82]
+Speaker 1 : book		 [1.82 ~ 2.10]
+Speaker 1 : to		 [2.10 ~ 2.25]
+Speaker 1 : grandma	 [2.25 ~ 2.89]
+Speaker 1 : do		 [3.22 ~ 3.46]
+Speaker 1 : you		 [3.46 ~ 3.67]
+Speaker 1 : have		 [3.67 ~ 3.95]
+Speaker 1 : a		 [3.95 ~ 4.05]
+Speaker 1 : box		 [4.05 ~ 4.75]
+Speaker 2 : yeah		 [5.23 ~ 5.74]
+Speaker 2 : I've		 [6.03 ~ 6.29]
+Speaker 2 : got		 [6.29 ~ 6.60]
+Speaker 2 : this		 [6.60 ~ 6.88]
+Speaker 2 : one		 [6.88 ~ 7.14]
+Speaker 2 : to		 [7.14 ~ 7.27]
+Speaker 2 : put		 [7.27 ~ 7.48]
+Speaker 2 : photo	 [7.48 ~ 7.84]
+Speaker 2 : albums	 [7.84 ~ 8.28]
+Speaker 2 : in		 [8.28 ~ 8.59]
+Speaker 2 : but		 [8.70 ~ 9.10]
+Speaker 2 : it's		 [9.27 ~ 9.47]
+Speaker 2 : a		 [9.47 ~ 9.58]
+Speaker 2 : bit		 [9.58 ~ 9.81]
+Speaker 2 : small	 [9.81 ~ 10.51]
+Speaker 1 : the		 [10.83 ~ 10.99]
+Speaker 1 : box		 [10.99 ~ 11.42]
+Speaker 1 : looks	 [11.42 ~ 11.68]
+Speaker 1 : big		 [11.68 ~ 11.95]
+Speaker 1 : enough	 [11.95 ~ 12.26]
+Speaker 1 : for		 [12.26 ~ 12.48]
+Speaker 1 : the		 [12.48 ~ 12.60]
+Speaker 1 : book		 [12.60 ~ 13.17]
+Speaker 1 : can		 [13.46 ~ 13.71]
+Speaker 1 : I		 [13.71 ~ 13.81]
+Speaker 1 : use		 [13.81 ~ 14.12]
+Speaker 1 : it		 [14.12 ~ 14.45]
 
-0 : dad
-Time : 0.0 ~ 0.75
-1 : I
-Time : 0.75 ~ 0.86
-2 : want
-Time : 0.86 ~ 1.19
-3 : to
-Time : 1.19 ~ 1.35
-4 : send
-Time : 1.35 ~ 1.67
-5 : this
-Time : 1.67 ~ 1.83
-6 : book
-Time : 1.83 ~ 2.316666666666667
-7 : to
-Time : 2.316666666666667 ~ 2.8033333333333337
-8 : grandma
-Time : 2.8033333333333337 ~ 3.29
-9 : do
-Time : 3.29 ~ 3.44
-10 : you
-Time : 3.44 ~ 3.67
-11 : have
-Time : 3.67 ~ 3.95
-12 : a
-Time : 3.95 ~ 4.05
-13 : box
-Time : 4.05 ~ 4.72
-14 : yeah
-Time : 5.24 ~ 5.7
-15 : I've
-Time : 5.7 ~ 6.155
-16 : got
-Time : 6.155 ~ 6.61
-17 : this
-Time : 6.61 ~ 6.87
-18 : one
-Time : 6.87 ~ 7.15
-19 : to
-Time : 7.15 ~ 7.26
-20 : put
-Time : 7.26 ~ 7.48
-21 : photo
-Time : 7.54 ~ 7.84
-22 : albums
-Time : 7.84 ~ 8.28
-23 : in
-Time : 8.28 ~ 8.54
-24 : but
-Time : 8.54 ~ 9.28
-25 : it's
-Time : 9.28 ~ 9.47
-26 : a
-Time : 9.47 ~ 9.57
-27 : bit
-Time : 9.57 ~ 9.81
-28 : small
-Time : 9.81 ~ 10.32
-
-Results from Watson : 
-I want to send this Ranma do you have a box yeah I found this one to put the photo albums in five it's a bit small 
-Complemented Results : 
-dad I want to send this book to grandma do you have a box yeah I've got this one to put photo albums in but it's a bit small 
-Answer : 
-dad I want to send this book to grandma do you have a box yeah I've got this one to put photo albums in but it's a bit small the box looks big enough for the book can I use it
+Speaker 1 : dad I want to send this book to grandma do you have a box 
+Speaker 2 : yeah I've got this one to put photo albums in but it's a bit small 
+Speaker 1 : the box looks big enough for the book can I use it 
 ```

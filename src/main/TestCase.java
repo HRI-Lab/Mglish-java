@@ -5,8 +5,11 @@ import java.util.List;
 
 import com.ibm.watson.developer_cloud.http.HttpMediaType;
 import com.ibm.watson.developer_cloud.speech_to_text.v1.model.RecognizeOptions;
+import com.ibm.watson.developer_cloud.speech_to_text.v1.model.SpeakerLabel;
+import com.ibm.watson.developer_cloud.speech_to_text.v1.model.SpeechAlternative;
 import com.ibm.watson.developer_cloud.speech_to_text.v1.model.SpeechResults;
 import com.ibm.watson.developer_cloud.speech_to_text.v1.model.SpeechTimestamp;
+import com.ibm.watson.developer_cloud.speech_to_text.v1.model.Transcript;
 
 public class TestCase {
 	
@@ -14,11 +17,13 @@ public class TestCase {
 		public String word = "";
 		public double startTime = 0.0;
 		public double endTime = 0.0;
+		public int speaker = 0;
 		
-		TimeStamp(String word, double startTime, double endTime){
+		TimeStamp(String word, double startTime, double endTime, int speaker){
 			this.word = word;
 			this.startTime = startTime;
 			this.endTime = endTime;
+			this.speaker = speaker;
 		}
 	}
 	
@@ -28,10 +33,31 @@ public class TestCase {
 	public RecognizeOptions options;
 	public ArrayList<TimeStamp> finalResult = new ArrayList<TimeStamp>();
 	
-	public String resultTranscript() {
-		return this.result.getResults().get(0).getAlternatives().get(0).getTranscript();
+	public List<SpeechTimestamp> resultTimestamps() {
+		List<SpeechTimestamp> ts = this.result.getResults().get(0).getAlternatives().get(0).getTimestamps();
+		boolean isFirst = true;
+		for (Transcript t: this.result.getResults()) {
+			if (isFirst) {
+				isFirst = false;
+				continue;
+			}
+			for (SpeechAlternative a: t.getAlternatives()) {
+				ts.addAll(a.getTimestamps());
+			}
+		}
+		return ts;
 	}
-		
+	
+	public String resultTranscript() {
+		String results = "";
+		for (Transcript t: this.result.getResults()) {
+			for (SpeechAlternative a: t.getAlternatives()) {
+				results += a.getTranscript();
+			}
+		}
+		return results;
+	}
+	
 	public boolean isCorrect() {
 		String resultTranscript = this.resultTranscript();
 		resultTranscript = trimRight(resultTranscript);
@@ -42,20 +68,102 @@ public class TestCase {
 		return resultTranscript.equals(transcript);
 	}
 	
-	private void addResult(String word, double startTime, double endTime) {
-		TimeStamp t = new TimeStamp(word, startTime, endTime);
+	private void addResult(String word, double startTime, double endTime, int speaker) {
+		TimeStamp t = new TimeStamp(word, startTime, endTime, speaker);
 		finalResult.add(t);
 	}
 	
-	private void getResult(int index) {
-		//System.out.println("getResult : " + index);
-		SpeechTimestamp t = this.result.getResults().get(0).getAlternatives().get(0).getTimestamps().get(index);
-		addResult(t.getWord(), t.getStartTime(), t.getEndTime());
+	private void addResult2(String word, double startTime, double endTime) {
+		TimeStamp t = new TimeStamp(word, startTime, endTime, 0);
+		finalResult.add(t);
 	}
 	
+	private int getSpeaker(SpeechTimestamp t) {
+		int speaker = -1;
+		for (SpeakerLabel s: this.result.getSpeakerLabels()) {
+			if (s.getFrom().equals(t.getStartTime()) && s.getTo().equals(t.getEndTime())) {
+				speaker = s.getSpeaker();
+				break;
+			}
+		}
+		return speaker + 1;
+	}
+	
+	private void getResult(int index) {
+		if (index >= this.resultTimestamps().size())
+			return;
+		SpeechTimestamp t = this.resultTimestamps().get(index);
+		
+		addResult(t.getWord(), t.getStartTime(), t.getEndTime(), getSpeaker(t));
+	}
+	
+	private void getResult2(int index) {
+		//System.out.println("getResult : " + index);
+		SpeechTimestamp t = this.result.getResults().get(0).getAlternatives().get(0).getTimestamps().get(index);
+		addResult2(t.getWord(), t.getStartTime(), t.getEndTime());
+	}
+	
+	// Result / Transcript
+	// Result[startIndex] == Transcript[startIndex2]
+	// Result[endIndex] == Transcript[endIndex2]
 	private void getResult(int startIndex, int endIndex, int startIndex2, int endIndex2) {
-		// ¿¹¿ÜÃ³¸®
-		//System.out.println("getResult : " + startIndex + " " + endIndex + " " + startIndex2 + " " + endIndex2);
+		// prevent exceptions
+		startIndex2 += 1;
+		if (startIndex > endIndex || startIndex2 > endIndex2)
+			return;
+		
+		String[] transcriptArr = this.transcript.split(" ");
+		List<SpeechTimestamp> ts = resultTimestamps();
+		double fStartTime, fEndTime;
+
+		if (startIndex != -1) {
+			fStartTime = ts.get(startIndex).getEndTime();
+		}
+		else
+			// if First word
+			fStartTime = 0;
+		
+		fEndTime = ts.get(endIndex).getStartTime();
+		
+		double startTime = fStartTime;
+		double endTime = fEndTime;
+		
+		int wordCount = 0;
+		for (int i = startIndex2; i < endIndex2; i++) {
+			wordCount += transcriptArr[i].length();
+		}
+		
+		double averageTime = (fEndTime - fStartTime) / (wordCount);
+		for (int i = startIndex2; i < endIndex2; i++) {
+			String word = transcriptArr[i];
+			int a = -1, b = -2;
+			if (startIndex != -1)
+				a = getSpeaker(ts.get(startIndex));
+			if (endIndex < ts.size()) {
+				if (startIndex == -1)
+					a = getSpeaker(ts.get(endIndex));
+				b = getSpeaker(ts.get(endIndex));
+			}
+			int speaker = 0;
+			if (a == b)
+				speaker = a;
+			
+			double time = this.averageTimeOfWord(word, speaker);
+			if (time == 0.0)
+				time = averageTime;
+			
+			endTime = startTime + time;
+			if (endTime > fEndTime)
+				endTime = fEndTime;
+			
+			this.addResult(word, startTime, endTime, speaker);
+			
+			startTime = endTime;
+		}
+	}
+	
+	private void getResult2(int startIndex, int endIndex, int startIndex2, int endIndex2) {
+		// ï¿½ï¿½ï¿½ï¿½Ã³ï¿½ï¿½
 		startIndex2 += 1;
 		if (startIndex > endIndex || startIndex2 > endIndex2)
 			return;
@@ -64,7 +172,7 @@ public class TestCase {
 		List<SpeechTimestamp> ts = this.result.getResults().get(0).getAlternatives().get(0).getTimestamps();
 		double fStartTime, fEndTime;
 		
-		// Ã¹ ´Ü¾îºÎÅÍ Æ²¸± °æ¿ì
+		// Ã¹ ï¿½Ü¾ï¿½ï¿½ï¿½ï¿½ Æ²ï¿½ï¿½ ï¿½ï¿½ï¿½
 		if (startIndex != -1)
 			fStartTime = ts.get(startIndex).getEndTime();
 		else
@@ -78,9 +186,9 @@ public class TestCase {
 		double averageTime = (fEndTime - fStartTime) / (endIndex2 - startIndex2);
 		for (int i = startIndex2; i < endIndex2; i++) {
 			String word = transcriptArr[i];
-			// È­ÀÚº° ´Ü¾îº° Æò±Õ ¹ßÀ½½Ã°£ °è»ê
-			double time = this.averageTimeOfWord(word);
-			// Æò±Õ ¹ßÀ½½Ã°£ÀÌ ¾øÀ» °æ¿ì Æò±Õ½Ã°£À¸·Î Ã¥Á¤
+			// È­ï¿½Úºï¿½ ï¿½Ü¾îº° ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½
+			double time = this.averageTimeOfWord2(word);
+			// ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ã°ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½Õ½Ã°ï¿½ï¿½ï¿½ï¿½ï¿½ Ã¥ï¿½ï¿½
 			if (time == 0.0)
 				time = averageTime;
 			
@@ -88,15 +196,14 @@ public class TestCase {
 			if (endTime > fEndTime)
 				endTime = fEndTime;
 			
-			this.addResult(word, startTime, endTime);
+			this.addResult2(word, startTime, endTime);
 			
 			startTime = endTime;
 		}
-		
 	}
 		
 	public ArrayList<Integer> findByResult() {
-		// OFFSETÀÇ ¹üÀ§
+		// OFFSETï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 		final int MAXOFFSET = 5;
 		String[] resultArr, transcriptArr;
 		resultArr = this.resultTranscript().split(" ");
@@ -108,7 +215,7 @@ public class TestCase {
 		// dad I want to send this book to grandma do you have a box yeah I've got this one to put photo albums in but it's a bit small
 		int offset = 0;
 		//			  0   1    2   3
-		// ÀÎ½Ä :	 	this Ranma do you
+		// ï¿½Î½ï¿½ :	 	this Ranma do you
 		// Answer :	this book to grandma do you
 		int foreIndex = -1;
 		int foreTranscriptIndex = -1;
@@ -116,10 +223,10 @@ public class TestCase {
 
 		for (int i = 0; i < resultArr.length; i++) {
 			
-			// Æ²¸®¸é : ex)Ranma
+			// Æ²ï¿½ï¿½ï¿½ï¿½ : ex)Ranma
 			if (!(resultArr[i].equals(transcriptArr[i + offset]))) {
 				boolean flag = false;
-				// ¿ÀÂ÷¹üÀ§ MAX_OFFSET ÀÌ³»ÀÇ °°Àº °ªÀ» Ã£´Â´Ù. (offsetÀ» ±¸ÇÑ´Ù.)
+				// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ MAX_OFFSET ï¿½Ì³ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã£ï¿½Â´ï¿½. (offsetï¿½ï¿½ ï¿½ï¿½ï¿½Ñ´ï¿½.)
 				for (int j = 1; j < resultArr.length && j <= MAXOFFSET; j++) {
 					if (resultArr[i].equals(transcriptArr[i + j + offset])) {
 						offset += j;
@@ -133,38 +240,38 @@ public class TestCase {
 				}
 				
 				if (flag) {
-					this.getResult(foreIndex, i, foreTranscriptIndex, i + offset);
-					this.getResult(i);
-					// ÇöÀç À§Ä¡ ±â·Ï
+					this.getResult2(foreIndex, i, foreTranscriptIndex, i + offset);
+					this.getResult2(i);
+					// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½
 					foreIndex = i;
 					foreTranscriptIndex = i + offset;
 					wrongIndex = -1;
 					continue;
 				}
 				
-				// Æ²¸° ÀÚ¸·ÀÌ ¸ÂÀ¸¸é
+				// Æ²ï¿½ï¿½ ï¿½Ú¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 				wrongList.add(i);
 				wrongIndex = i;
 				System.out.println("Wrong Word : " + i + " : " + resultArr[i] + " ");
 				
 				
 			} else {
-				// ¸ÂÀ¸¸é
+				// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 				//if (wrongList.isEmpty()) {
-				// Æ²¸° ÀÚ¸· ¸®½ºÆ®°¡ ºñ¾îÀÖÀ¸¸é
+				// Æ²ï¿½ï¿½ ï¿½Ú¸ï¿½ ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 				if (wrongIndex == -1) {
-					// ÇöÀç Æ²¸° ÀÚ¸·ÀÌ ¾øÀ¸¸é
-					// ÇöÀç À§Ä¡ ±â·Ï
+					// ï¿½ï¿½ï¿½ï¿½ Æ²ï¿½ï¿½ ï¿½Ú¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+					// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½
 					foreIndex = i;
 					foreTranscriptIndex = i + offset;
-					// °á°ú¿¡ ÇöÀç ÀÚ¸· °ªÀ» Ãß°¡
-					this.getResult(i);
+					// ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ú¸ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½
+					this.getResult2(i);
 					continue;
 				}
-				// Æ²¸° ÀÚ¸·ÀÌ ÀÖ¾úÀ½ == Áö±ÝÀÌ Æ²¸° ÀÚ¸· ÀÌÈÄ Ã³À½ ¸ÂÀº ÀÚ¸·ÀÌ¶ó¸é
-				this.getResult(foreIndex, i, foreTranscriptIndex, i + offset);
-				this.getResult(i);
-				// ÇöÀç À§Ä¡ ±â·Ï
+				// Æ²ï¿½ï¿½ ï¿½Ú¸ï¿½ï¿½ï¿½ ï¿½Ö¾ï¿½ï¿½ï¿½ == ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Æ²ï¿½ï¿½ ï¿½Ú¸ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ú¸ï¿½ï¿½Ì¶ï¿½ï¿½
+				this.getResult2(foreIndex, i, foreTranscriptIndex, i + offset);
+				this.getResult2(i);
+				// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½
 				foreIndex = i;
 				foreTranscriptIndex = i + offset;
 				wrongIndex = -1;
@@ -174,12 +281,93 @@ public class TestCase {
 		return wrongList;
 	}
 	
-	private double averageTimeOfWord(String word) {
+	public ArrayList<Integer> findByTranscript() {
+		final int MAXOFFSET = 3;
+		String[] resultArr, transcriptArr;
+		resultArr = this.resultTranscript().split(" ");
+		transcriptArr = this.transcript.split(" ");
+		ArrayList<Integer> wrongList = new ArrayList<Integer>();
+		
+		// Example
+		// I want to send this Ranma do you have a box yeah I found this one to put the photo albums in five it's a bit small
+		// dad I want to send this book to grandma do you have a box yeah I've got this one to put photo albums in but it's a bit small
+		int offset = 0;
+		int foreIndex = -1;
+		int foreTranscriptIndex = -1;
+		int wrongIndex = -1;
+		int i = 0;
+
+		for (i = 0; i < transcriptArr.length; i++) {
+			
+			if ((i + offset) < resultArr.length && !(transcriptArr[i].equals(resultArr[i + offset]))) {
+//				System.out.println(transcriptArr[i] + " ì™€ " + resultArr[i + offset] + "ë¹„êµ");
+				// Not Found
+				boolean flag = false;
+				for (int j = 1; (i + j + offset) < resultArr.length && j <= MAXOFFSET; j++) {
+					if (transcriptArr[i].equals(resultArr[i + j + offset])) {
+						offset += j;
+						// Found
+						flag = true;
+						break;
+					} else if ((i - j + offset) > 0 && transcriptArr[i].equals(resultArr[i - j + offset])) {
+						offset -= j;
+						// Found
+						flag = true;
+						break;
+					}
+				}
+				
+				if (flag) {
+					this.getResult(foreIndex, i + offset, foreTranscriptIndex, i);
+					this.getResult(i + offset);
+					foreIndex = i + offset;
+					foreTranscriptIndex = i;
+					wrongIndex = -1;
+					continue;
+				}
+				
+				wrongList.add(i);
+				wrongIndex = i;
+				//System.out.println("Wrong Word : " + i + " : " + transcriptArr[i] + " ");
+			} else {
+				if (wrongIndex == -1) {
+					foreIndex = i + offset;
+					foreTranscriptIndex = i;
+					this.getResult(i + offset);
+					continue;
+				}
+				this.getResult(foreIndex, i + offset, foreTranscriptIndex, i);
+				this.getResult(i + offset);
+				foreIndex = i + offset;
+				foreTranscriptIndex = i;
+				wrongIndex = -1;
+			}
+		}
+		
+		return wrongList;
+	}
+	
+	private double averageTimeOfWord(String word, int speaker) {
 		double totalTime = 0.0;
 		double totalCount = 0; 
 		
-		for (SpeechTimestamp e: this.result.getResults().get(0).getAlternatives().get(0).getTimestamps()) {
-			// °°À¸¸é
+		for (SpeechTimestamp e: resultTimestamps()) {
+			if (e.getWord() == word && getSpeaker(e) == speaker) {
+				totalTime += e.getEndTime() - e.getStartTime();
+				totalCount++;
+			}
+		}
+		if (totalCount == 0)
+			return 0.0;
+		else 
+			return totalTime / totalCount;
+	}
+	
+	private double averageTimeOfWord2(String word) {
+		double totalTime = 0.0;
+		double totalCount = 0; 
+		
+		for (SpeechTimestamp e: resultTimestamps()) {
 			if (e.getWord() == word) {
 				totalTime += e.getEndTime() - e.getStartTime();
 				totalCount++;
@@ -192,12 +380,25 @@ public class TestCase {
 	}
 	
 	public void printTimeStampResult() {
-		int i = 0;
 		for (TimeStamp t: this.finalResult) {
-			System.out.println(i + " : " + t.word);
-			System.out.println("Time : " + t.startTime + " ~ " + t.endTime);
-			i++;
+			System.out.print("Speaker " + t.speaker + " : " + t.word);
+			if (t.word.length() < 5)
+				System.out.print("\t");
+			System.out.println( String.format("\t [%.2f ~ %.2f]", t.startTime, t.endTime));
 		}
+	}
+	
+	public void printConversation() {
+		int beforeSpeaker = -1;
+		for (TimeStamp t: this.finalResult) {
+			if (t.speaker != beforeSpeaker) {
+				System.out.println();
+				beforeSpeaker = t.speaker;
+				System.out.print("Speaker " + t.speaker + " : ");
+			}
+			System.out.print(t.word + " ");
+		}
+		System.out.println();
 	}
 	
 	public void printTranscriptResult() {
@@ -221,5 +422,9 @@ public class TestCase {
             i++;
         }
         return s.substring(i);
+    }
+    
+    public void test() {
+    		System.out.println(this.resultTranscript());
     }
 }
