@@ -17,7 +17,7 @@ public class SDBManager {
 				sdb.appendNewWord(word, time);
 			} else {
 				// 1.2 해당 단어 가 검색된 경우
-				sdb.appendNewWord(word, time);
+				sdb.appendExistWord(word, time);
 			}
 			
 		} else {

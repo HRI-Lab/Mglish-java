@@ -53,6 +53,8 @@ public class MainApp {
 			
 			t.result = service.recognize(audio, t.options).execute();
 			
+			//System.out.println(t.result);
+			
 			Extractor extractor = new Extractor(t);
 			
 			extractor.extract();

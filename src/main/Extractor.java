@@ -72,7 +72,7 @@ public class Extractor {
 				// 맞는 단어를 찾았을 경우 해당 값 만큼 offset을 더한다.
 				if (flag) {
 					this.getResult(foreIndex, i + offset, foreTranscriptIndex, i);
-					this.addResult(i + offset);
+					this.addResult(i + offset, i);
 					foreIndex = i + offset;
 					foreTranscriptIndex = i;
 					wrongIndex = -1;
@@ -85,11 +85,11 @@ public class Extractor {
 				if (wrongIndex == -1) {
 					foreIndex = i + offset;
 					foreTranscriptIndex = i;
-					this.addResult(i + offset);
+					this.addResult(i + offset, i);
 					continue;
 				}
 				this.getResult(foreIndex, i + offset, foreTranscriptIndex, i);
-				this.addResult(i + offset);
+				this.addResult(i + offset, i);
 				foreIndex = i + offset;
 				foreTranscriptIndex = i;
 				wrongIndex = -1;
@@ -100,8 +100,55 @@ public class Extractor {
 //			this.getResult(foreIndex, i + offset, foreTranscriptIndex, i);
 //			this.addResult(i + offset);
 //		}
+		postProcess();
 	}
 	
+	// Speaker를 모르는 정보화 자막에 대해 가지고 있는 자막과 나온 결과를 비교하여 화자정보를 찾아 넣는 함수
+	private void postProcess() {
+		// 해당 단어의 줄
+		int lineNumber = 0;
+		for (TimeStamp t: this.finalResult) {
+			if (t.speaker == 0) {
+				int index = finalResult.indexOf(t);
+				lineNumber = lineNumberOf(index);
+				for (int i = index, j = 0; i + j < finalResult.size(); j++) {
+					TimeStamp f = this.finalResult.get(i + j);
+					if (f.speaker != 0 && lineNumberOf(i + j) == lineNumber) {
+						t.speaker = f.speaker;
+						break;
+					}
+					if (i - j >= 0) {
+						TimeStamp f2 = this.finalResult.get(i - j);
+						if (f2.speaker != 0 && lineNumberOf(i - j) == lineNumber) {
+							t.speaker = f2.speaker;
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	// 해당 index의 단어가 몇번째 줄에 있는지 반환하는 함수
+	private int lineNumberOf(int index) {
+		final String[] transcriptArr = getSTRFilterNewLine(testCase.transcript).split(" ");
+		int i = 0;
+		int line = 1;
+		// 줄단위로 나눈 String배열
+		String[] lines = testCase.transcript.split("\\r?\\n");
+		for (String s: lines) {
+			for (String s2: s.split(" ")) {
+				if (i == index)
+					return line;
+				i++;
+			}
+			line++;
+		}
+		
+		return 0;
+	}
+	
+	// 단어,화자,타이밍 정보를 받아 db에 저장하는 함수
 	private void appendResult(String word, double startTime, double endTime, int speaker) {
 		TimeStamp t = new TimeStamp(word, startTime, endTime, speaker);
 		
@@ -111,14 +158,19 @@ public class Extractor {
 		finalResult.add(t);
 	}
 	
-	private void addResult(int index) {
+	// 잘 인식된 단어를 바로 저장하는 함수
+	private void addResult(int index, int index2) {
 		if (index >= testCase.resultTimestamps().size())
 			return;
+		
+		final String[] transcriptArr = getSTRFilterNewLine(testCase.transcript).split(" ");
+		
 		SpeechTimestamp t = testCase.resultTimestamps().get(index);
 		
-		appendResult(t.getWord(), t.getStartTime(), t.getEndTime(), getSpeaker(t));
+		appendResult(transcriptArr[index2], t.getStartTime(), t.getEndTime(), getSpeaker(t));
 	}
 	
+	// 해당 타이밍정보에 맞는 화자를 찾아주는 함수
 	private int getSpeaker(SpeechTimestamp t) {
 		int speaker = -1;
 		for (SpeakerLabel s: testCase.result.getSpeakerLabels()) {
@@ -135,7 +187,7 @@ public class Extractor {
 		final List<SpeechTimestamp> ts = testCase.resultTimestamps();
 		double fStartTime = 0, fEndTime = 0;
 		int speaker = 0;
-		final String word = transcriptArr[startIndex2+1];
+		final String word = transcriptArr[startIndex2];
 
 		int a = -1, b = -2;
 		// 특정 음량(dB) T 이상의 신호가 시작 되는 지점을 찾을 수 없으므로 전 단어의 발음이 끝나는 시간(E_a)으로 정한다.
@@ -167,14 +219,16 @@ public class Extractor {
 	// startIndex2와 endIndex2 : 가지고 있는 자막 파일의 자막의 배열 Index
 	// -> startIndex ~ endIndex 사이의 값들이 오인식된 단어 정보임을 뜻함.
 	private void getResult(int startIndex, int endIndex, int startIndex2, int endIndex2) {
-		// System.out.println("startIndex2 : " + startIndex2);
-		// System.out.println("endIndex2 : " + endIndex2);
+//		System.out.println("startIndex : " + startIndex + " endIndex : " + endIndex);
+//		System.out.println("startIndex2 : " + startIndex2 + " endIndex2 : " + endIndex2);
+//		System.out.println();
+		// System.out.println();
 		// prevent exceptions
 		startIndex2 += 1;
-		if (startIndex > endIndex || startIndex2 > endIndex2)
+		if (startIndex2 > endIndex2)
 			return;
 		
-		int n = endIndex2 - startIndex2 - 2;
+		int n = endIndex2 - startIndex2;
 		if (n == 1) {
 			algorithmN1(startIndex, endIndex, startIndex2, endIndex2);
 			return;
@@ -203,6 +257,7 @@ public class Extractor {
 		
 		double averageTime = (fEndTime - fStartTime) / (wordCount);
 		for (int i = startIndex2; i < endIndex2; i++) {
+			// i = 6 시작
 			String word = transcriptArr[i];
 			int a = -1, b = -2;
 			if (startIndex != -1)
@@ -221,7 +276,7 @@ public class Extractor {
 			if (sdbManager.isExist(speaker, word))
 				time = sdbManager.averageTimeOf(speaker, word);
 			else
-				time = averageTime;
+				time = averageTime * word.length();
 			
 			endTime = startTime + time;
 			if (endTime > fEndTime)
