@@ -10,15 +10,16 @@ import com.ibm.watson.developer_cloud.http.HttpMediaType;
 import com.ibm.watson.developer_cloud.speech_to_text.v1.SpeechToText;
 import com.ibm.watson.developer_cloud.speech_to_text.v1.model.RecognizeOptions;
 
-public class DashboardApp {
-	// input file names to test
-	private static final String audioFileName = "Sample2.mp3";
+public class MainApp {
+	// Input file names to test
+	private static final String audioFileName = "Sample2_mix.mp3";
 	private static final String textFileName = "Sample2_mix.txt";
 	
+	// for multiple test cases
 	private static ArrayList<TestCase> testCases = new ArrayList<TestCase>();
-	
 	private static SpeechToText service = new SpeechToText();
 	
+	// Initialize TestCases
 	private static void initTestCases() throws IOException {
 		TestCase testCase = new TestCase();
 		
@@ -33,6 +34,7 @@ public class DashboardApp {
 		testCases.add(testCase);
 	}
 	
+	// Initialize SpeechToText
 	private static void initSpeechToText() {
 		service.setUsernameAndPassword(Credentials.UserName, Credentials.Password);
 	}
@@ -45,34 +47,19 @@ public class DashboardApp {
 	public static void main(String[] args) throws IOException {
 		initTestCases();
 		initSpeechToText();
- 
-		// Test
-		//int i = 0;
 		
 		for (TestCase t: testCases) {
 			File audio = new File(t.resourcePath);
 			
 			t.result = service.recognize(audio, t.options).execute();
 			
-
-//			System.out.println("Wrong Words Index : " + t.findByResult());
-//			System.out.println("Wrong Words Index : " + t.findByTranscript());
-//			testPrint(t);
+			Extractor extractor = new Extractor(t);
 			
-			t.findByTranscript();
-			t.printTimeStampResult();
-			t.printConversation();
-				
+			extractor.extract();
+			extractor.printTimeStampResult();
+			extractor.printConversation();
+			
+			//System.out.println(t.transcript);
 		}
-	}
-	
-	private static void testPrint(TestCase t) {
-		System.out.println();
-		t.printTimeStampResult();
-		System.out.println();
-		System.out.println("Results from Watson : \n" + t.resultTranscript());
-		t.printTranscriptResult();
-		System.out.println();
-		System.out.println("Answer : \n" + t.transcript);
 	}
 }
