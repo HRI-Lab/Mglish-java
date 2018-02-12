@@ -20,6 +20,10 @@ public class Extractor {
 		public double endTime = 0.0;
 		public int speaker = 0;
 		
+		TimeStamp(){
+			
+		}
+		
 		TimeStamp(String word, double startTime, double endTime, int speaker){
 			this.word = word;
 			this.startTime = startTime;
@@ -158,6 +162,16 @@ public class Extractor {
 		finalResult.add(t);
 	}
 	
+	// 단어,화자,타이밍 정보를 받아 db에 저장하는 함수
+		private void appendResult(TimeStamp nt) {
+			TimeStamp t = new TimeStamp(nt.word, nt.startTime, nt.endTime, nt.speaker);
+			
+			// SDB를 Update한다.
+			sdbManager.updateSDB(t.speaker, t.word, (t.endTime - t.startTime));
+			
+			finalResult.add(t);
+		}
+	
 	// 잘 인식된 단어를 바로 저장하는 함수
 	private void addResult(int index, int index2) {
 		if (index >= testCase.resultTimestamps().size())
@@ -211,6 +225,99 @@ public class Extractor {
 		appendResult(word, fStartTime, fEndTime, speaker);
 	}
 	
+	private void algorithmN3(int startIndex, int endIndex, int startIndex2, int endIndex2) {
+		final String[] transcriptArr = getSTRFilterNewLine(testCase.transcript).split(" ");
+		final List<SpeechTimestamp> ts = testCase.resultTimestamps();
+		
+		ArrayList<TimeStamp> list = new ArrayList<TimeStamp>();
+		// 모르는 단어의 수 = N
+		int count = 0;
+		// List에 전부 삽입
+		for (int i = startIndex2; i < endIndex2; i++) {
+			TimeStamp t = new TimeStamp();
+			final String word = transcriptArr[i];
+			
+			t.word = word;
+			
+			list.add(t);			
+			count++;
+		}
+		
+		// 맞는 첫 단어 결과(타이밍 값을 가지고 있는)
+		SpeechTimestamp startTS = ts.get(startIndex);
+		// 맞는 끝 단어 결과(타이밍 값을 가지고 있는)
+		SpeechTimestamp endTS = ts.get(endIndex);
+		
+		// 첫 번째 모르는단어의 시작시간 = 맞는 첫 단어의 끝시간
+		list.get(0).startTime = startTS.getEndTime();
+		// 끝 번째 모르는단어의 시작시간 = 맞는 끝 단어의 첫시간
+		list.get(count-1).endTime = endTS.getStartTime();
+		
+		// SDB에 없는 부분 순열을 찾기 위한 index
+		int subStartIndex = -1;
+		int subEndIndex = -1;
+		
+		// 부분 순열을 찾는 for문
+		for (int i = 0; i < count; i++) {
+			// 양쪽 끝 timestamp
+			TimeStamp startT = list.get(i);
+			TimeStamp endT = list.get(count - i - 1);
+			
+			if (subStartIndex == -1) {
+				if (startT.endTime == 0) {
+					if (!sdbManager.isExist(startT.speaker, startT.word)) {
+						subStartIndex = i;
+					} else {
+						startT.endTime = startT.startTime + sdbManager.averageTimeOf(startT.speaker, startT.word);
+						list.get(i+1).startTime = startT.endTime;
+					}
+				} else {
+					list.get(i+1).startTime = startT.endTime;
+				}
+			}
+			
+			if (subEndIndex == -1) {
+				if (endT.startTime == 0) {
+					if (!sdbManager.isExist(endT.speaker, endT.word)) {
+						subEndIndex = i;
+					} else {
+						endT.startTime = endT.endTime - sdbManager.averageTimeOf(endT.speaker, endT.word);
+						list.get(i-1).endTime = endT.startTime;
+					}
+				} else {
+					list.get(i-1).endTime = endT.startTime;
+				}
+			}
+		}
+		
+		// 부분순열이 존재하는 경우
+		if (!(subStartIndex != -1 && subEndIndex != -1)) {
+			TimeStamp startT = list.get(subStartIndex);
+			TimeStamp endT = list.get(subEndIndex);
+			
+			double totalTime = endT.endTime - startT.startTime;
+			
+			int wordCount = 0;
+			for (int i = subStartIndex; i <= subEndIndex; i++) {
+				wordCount += list.get(i).word.length();
+			}
+			
+			double averageTime = totalTime / wordCount;
+			
+			for (int i = subStartIndex; i < subEndIndex; i++) {
+				TimeStamp t1 = list.get(i);
+				TimeStamp t2 = list.get(i+1);
+				
+				t1.endTime = t1.startTime + (averageTime * t1.word.length());
+				t2.startTime = t1.endTime;
+			}
+		}
+
+		for (TimeStamp t: list) {
+			appendResult(t);
+		}
+	}
+	
 	// 2-2-1
 	// 이면 4를 수행
 	// 이면 5를 수행
@@ -229,8 +336,12 @@ public class Extractor {
 			return;
 		
 		int n = endIndex2 - startIndex2;
-		if (n == 1) {
+		int n2 = endIndex - startIndex - 1;
+		if (n == 1 && n2 == 1) {
 			algorithmN1(startIndex, endIndex, startIndex2, endIndex2);
+			return;
+		} else if (n == n2) {
+			algorithmN3(startIndex, endIndex, startIndex2, endIndex2);
 			return;
 		}
 		
