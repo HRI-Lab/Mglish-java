@@ -53,6 +53,7 @@ public class SDBManager {
 		return sdb.getTimeOfWord(word);
 	}
 	
+	// 해당 speaker의 SDB를 찾아 반환한다.
 	private SDB findBySpeaker(int speaker) {
 		for (SDB sdb: sdbArr) {
 			if (speaker == sdb.spearker)
@@ -61,6 +62,7 @@ public class SDBManager {
 		return new SDB();
 	}
 	
+	// 해당 speaker가 존재하는지 여부를 반환한다.
 	private boolean isSpeakerExist(int speaker) {
 		for (SDB sdb: sdbArr) {
 			if (speaker == sdb.spearker)

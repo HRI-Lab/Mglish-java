@@ -14,6 +14,7 @@ public class MainApp {
 	// Input file names to test
 	private static final String audioFileName = "Sample2_mix.mp3";
 	private static final String textFileName = "Sample2_mix.txt";
+	private static final String resultFileName = "result.txt";
 	
 	// for multiple test cases
 	private static ArrayList<TestCase> testCases = new ArrayList<TestCase>();
@@ -39,6 +40,7 @@ public class MainApp {
 		service.setUsernameAndPassword(Credentials.UserName, Credentials.Password);
 	}
 	
+	// 파일을 읽어오는 함수
 	private static String readFile(String path, Charset encoding) throws IOException {
 	  byte[] encoded = Files.readAllBytes(Paths.get(path));
 	  return new String(encoded, encoding);
@@ -53,15 +55,29 @@ public class MainApp {
 			
 			t.result = service.recognize(audio, t.options).execute();
 			
-			//System.out.println(t.result);
-			
+			// 해당 TestCase에 대한 추출기 선언
 			Extractor extractor = new Extractor(t);
 			
+			// 타이밍 정보 추출 시작
 			extractor.extract();
+			// 타이밍 정보 출력
 			extractor.printTimeStampResult();
+			// 대화 출력
 			extractor.printConversation();
 			
-			//System.out.println(t.transcript);
+			writeFile(resultFileName, extractor.timeStampResultString() + extractor.conversationString());
 		}
+	}
+	
+	private static void writeFile(String path, String str) {
+		try {
+			BufferedWriter out = new BufferedWriter(new FileWriter("resources/" + path));
+	
+		    out.write(str);
+		    out.close();
+	    } catch (IOException e) {
+	        System.err.println(e); // 에러가 있다면 메시지 출력
+	        System.exit(1);
+	    }
 	}
 }

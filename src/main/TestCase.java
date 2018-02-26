@@ -14,6 +14,7 @@ public class TestCase {
 	public SpeechResults result;
 	public RecognizeOptions options;
 	
+	// Watson에서 받은 결과의 자막정보 객체를 전부 연결하여 반환한다.
 	public List<SpeechTimestamp> resultTimestamps() {
 		List<SpeechTimestamp> ts = this.result.getResults().get(0).getAlternatives().get(0).getTimestamps();
 		boolean isFirst = true;
@@ -29,6 +30,7 @@ public class TestCase {
 		return ts;
 	}
 	
+	// Watson에서 받은 결과의 자막정보를 스트링으로 전부 연결하여 반환한다.
 	public String resultTranscript() {
 		String results = "";
 		for (Transcript t: this.result.getResults()) {

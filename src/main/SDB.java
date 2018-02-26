@@ -16,11 +16,13 @@ public class SDB {
 		public int count = 0;
 	}
 	
+	// 해당 단어의 발음시간을 반환한다.
 	public double getTimeOfWord(String word) {
 		Word result = this.wordMap.get(word);
 		return result.time;
 	}
 	
+	// 해당 단어가 있는지 여부를 반환
 	public boolean isWordExist(String word) {
 		return wordMap.containsKey(word);
 	}
